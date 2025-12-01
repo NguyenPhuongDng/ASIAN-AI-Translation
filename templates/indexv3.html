@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Translator - Dịch thuật thông minh</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="header">
+        <h1>🌍 AI Translator</h1>
+        <p>Dịch thuật thông minh - Nhanh chóng & Chính xác</p>
+    </div>
+
+    <div class="container">
+        <div class="translate-box">
+
+            <!-- Language Selection -->
+            <div class="language-selector">
+                <div class="language-dropdown">
+                    <button class="language-button" id="sourceLangBtn">
+                        <span id="sourceLangText">Chọn ngôn ngữ</span>
+                        <span>▼</span>
+                    </button>
+
+                    <div class="dropdown-menu" id="sourceDropdown">
+                        <div class="search-box">
+                            <input type="text" id="sourceSearch" placeholder="🔍 Tìm kiếm ngôn ngữ...">
+                        </div>
+                        <ul class="language-list" id="sourceList"></ul>
+                    </div>
+                </div>
+
+                <button class="swap-button" id="swapBtn" title="Đổi ngôn ngữ">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z"/>
+                    </svg>
+                </button>
+
+                <div class="language-dropdown">
+                    <button class="language-button" id="targetLangBtn">
+                        <span id="targetLangText">English</span>
+                        <span>▼</span>
+                    </button>
+
+                    <div class="dropdown-menu" id="targetDropdown">
+                        <div class="search-box">
+                            <input type="text" id="targetSearch" placeholder="🔍 Tìm kiếm ngôn ngữ...">
+                        </div>
+                        <ul class="language-list" id="targetList"></ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error message -->
+            <div class="error-message" id="errorMessage"></div>
+
+            <!-- Text Areas -->
+            <div class="text-areas">
+                <div class="text-area input">
+                    <div class="text-area-header">Văn bản gốc</div>
+                    <textarea id="sourceText" placeholder="Nhập văn bản cần dịch... (Nhấn Ctrl+Enter để dịch nhanh)"></textarea>
+                    <div class="char-count">
+                        <span id="charCount">0</span> / 5000
+                    </div>
+                </div>
+
+                <div class="text-area output">
+                    <div class="text-area-header">Bản dịch</div>
+                    <textarea id="targetText" placeholder="Bản dịch sẽ xuất hiện ở đây..." readonly></textarea>
+
+                    <div class="feedback-buttons">
+                        <button class="like-btn" id="likeBtn">👍</button>
+                        <button class="dislike-btn" id="dislikeBtn">👎</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading indicator -->
+            <div class="loading" id="loading">
+                ⏳ Đang dịch văn bản...
+            </div>
+
+            <!-- Bottom Actions -->
+            <div class="bottom-actions">
+
+                <div class="action-group">
+                    <div class="file-upload">
+                        <label for="fileInput">
+                            📄 Chọn file
+                            <input type="file" id="fileInput" accept=".txt,.doc,.docx,.pdf,.odt">
+                        </label>
+                    </div>
+                    <span class="file-name" id="fileName"></span>
+
+                    <button class="tts-button" id="ttsBtn" title="Chuyển văn bản thành giọng nói">
+                        🔊 Nghe bản dịch
+                    </button>
+                </div>
+
+                <div class="action-group">
+                    <label for="styleSelect" style="font-weight:600;color:#495057;">🎨 Chọn phong cách:</label>
+                    <select id="styleSelect"
+                        style="padding:12px 16px;border:2px solid #e1e8ed;border-radius:12px;font-size:15px;font-weight:600;color:#667eea;cursor:pointer;">
+                        {% for s in styte_list %}
+                            <option value="{{ s }}">{{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="thinking-wrapper">
+                    <span class="thinking-label">🧠 Thinking Mode</span>
+                    <label class="switch">
+                        <input type="checkbox" id="thinkingToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <button class="translate-button" id="translateBtn">✨ Dịch ngay</button>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FLASK DATA (safe for Jinja) -->
+    <script>
+        /* Dữ liệu render từ Flask. Không dùng {{ }} trong comment để tránh lỗi */
+        const languageCodeDict = {{ language_code_dict | tojson }};
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>

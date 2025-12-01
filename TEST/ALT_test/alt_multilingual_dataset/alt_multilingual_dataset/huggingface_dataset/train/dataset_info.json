@@ -1,0 +1,44 @@
+{
+  "citation": "",
+  "description": "",
+  "features": {
+    "en": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "id": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "ms": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "fil": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "khm": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "lo": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "th": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "my": {
+      "dtype": "string",
+      "_type": "Value"
+    },
+    "vi": {
+      "dtype": "string",
+      "_type": "Value"
+    }
+  },
+  "homepage": "",
+  "license": ""
+}
