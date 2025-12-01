@@ -3,7 +3,7 @@ services:
   web:
     build: .
     ports:
-      - "5000:5000"
+      - "5000:5000"  # Map port 7860 của máy bạn vào 7860 của container
     environment:
       - FLASK_ENV=production
     volumes:

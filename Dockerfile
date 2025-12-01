@@ -1,20 +1,22 @@
-# Base image
-FROM python:3.10-slim
+# 1. Chọn base image
+FROM python:3.11-slim
 
-# Set work directory
 WORKDIR /app
 
-# Copy requirements
 COPY requirements.txt .
-
-# Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy entire project
-COPY . .
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+	PATH=/home/user/.local/bin:$PATH
 
-# Expose Flask port
+WORKDIR $HOME/app
+
+
+COPY --chown=user . $HOME/app
+
+
 EXPOSE 5000
 
-# Run Flask app
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:7860", "app:app", "--timeout", "120"]
