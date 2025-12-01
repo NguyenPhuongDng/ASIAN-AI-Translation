@@ -48,7 +48,6 @@ for filename in os.listdir(Config.AUDIO_PATH):
 # -------------------------------------------------------------------------
 
 app = Flask(__name__)
-app.config['DEBUG'] = True
 
 @app.route("/", methods=["GET"])
 def index():
@@ -89,8 +88,8 @@ def handle_translate():
 
         result = MNT.call_ngrok_model(
             text,
-            fr_code==fr_code,
-            src_code==src_code
+            fr_code=fr_code,
+            src_code=src_code
         )
 
         if THINKING:

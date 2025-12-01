@@ -1,13 +1,10 @@
 import google.generativeai as genai
-from langdetect import detect
 from config import Config
-import os
-from dotenv import load_dotenv
-import google.generativeai as genai
 
 import sqlite3
 import ahocorasick
-from comet import download_model, load_from_checkpoint
+# from comet import download_model, load_from_checkpoint
+import requests
 
 
 class Gemini_Service:
@@ -21,15 +18,8 @@ class Gemini_Service:
         except Exception as e:
             print(f"[ERROR] Could not initialize Gemini model: {e}")
             self.model = None
-        
-        print("Loading COMET Model (This may take a while)...")
-        try:
-            model_path = download_model(Config.COMET_MODEL_NAME)
-            self.comet_model = load_from_checkpoint(model_path)
-            print("COMET Model Loaded.")
-        except Exception as e:
-            print(f"Warning: Could not load COMET model. Error: {e}")
-            self.comet_model = None
+
+        self.NGROK_URL = Config.NGROK_URL
 
     def call_gemini_style_edit(self, src_text: str, tranlate_text: str, source_lang : str, target_lang : str, style: str, prompt_template) -> str:
         prompt = prompt_template.get(style, "None")
@@ -45,7 +35,6 @@ class Gemini_Service:
                 "temperature": 0.2
             }
         )
-
         after_text = response.text.strip()
         return after_text
 
@@ -137,6 +126,8 @@ class Gemini_Service:
 
     def commet_score(self, data, src_text, tar_text):
         #print(f"[Thinking] Scoring {len(data)} candidates with COMET...")
+        if not self.NGROK_URL:
+            return None
         d = []
         for candidate in data:
             d.append({
@@ -144,17 +135,22 @@ class Gemini_Service:
                 "mt": [candidate],    # candidate translation
                 "ref": [[tar_text]]   # reference(s)
             })
-        scores = self.comet_model.predict(d, batch_size=8, gpus=1)
-        sentence_scores = scores['scores']
 
-        # Tìm câu có điểm cao nhất
-        #print(f"[Thinking] COMET Scores: {sentence_scores}")
-        best_index = max(range(len(sentence_scores)), key=lambda i: sentence_scores[i])
+        try:
+            response = requests.post(f"{self.NGROK_URL}/comet", json={"data": d})
+            comet = response.json()         
+            comet.get("comet_score", "")
+        except Exception as e:
+            return None
+        
+        best_index = max(range(len(comet)), key=lambda i: comet[i])
         best_sentence = data[best_index]
-        best_score = sentence_scores[best_index]
+        best_score = comet[best_index]
 
         return best_sentence, best_score
 
+
+        
     def call_gemini_edit(self, src_text: str, src_lang: str, tar_lang: str, tar_text : str) -> str:
         if not self.model: return tar_text
 
@@ -182,6 +178,8 @@ class Gemini_Service:
             
             if len(candidates) > 1:
                 best_sentence, best_score = self.commet_score(candidates, src_text, tar_text)
+                if not best_sentence:
+                    return tar_text
                 return best_sentence
             elif len(candidates) == 1:
                 return candidates[0]
