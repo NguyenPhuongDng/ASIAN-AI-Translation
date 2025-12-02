@@ -28,11 +28,12 @@ class Gemini_Service:
 
         prompt_filled = prompt.replace("{{source_text}}", src_text).replace("{{translated_text}}", tranlate_text).replace("{{source_lang}}", source_lang).replace("{{target_lang}}", target_lang)
 
-        print(f"[Thinking] Style Prompt: {prompt_filled}")
+        #print(f"[Thinking] Style Prompt: {prompt_filled}")
         response = self.model.generate_content(
             prompt_filled,
             generation_config={
-                "temperature": 0.2
+                "temperature": 0.7,
+                "max_output_tokens": 4048,
             }
         )
         after_text = response.text.strip()
@@ -99,7 +100,7 @@ class Gemini_Service:
             
         return results
 
-    def make_prompt(self, src_text: str, src_lang: str, tar_lang: str, tar_text : str, phrases: str, k : int) -> str:
+    def make_prompt(self, src_text: str, src_lang: str, tar_lang: str, tar_text : str, phrases: str, k : int, style: str) -> str:
         prompt = f"""
     You are a post-editing model. Your task is to refine and correct a target sentence (tar_text) based on:
     1. The original source sentence (src_text)
@@ -113,6 +114,7 @@ class Gemini_Service:
     - tar_text: "{tar_text}"
     - tar_lang: "{tar_lang}"
     - extracted_phrases: {phrases}
+    - style: {style}
 
     Objective:
     - Adjust tar_text so it accurately reflects the meaning of src_text.
@@ -151,7 +153,18 @@ class Gemini_Service:
 
 
         
-    def call_gemini_edit(self, src_text: str, src_lang: str, tar_lang: str, tar_text : str) -> str:
+    def call_gemini_edit(self, src_text: str, src_lang: str, tar_lang: str, tar_text: str, style : str, prompt_template, thinking : bool) -> str:
+        if not thinking:
+            results = self.call_gemini_style_edit(
+                src_text,
+                tar_text,
+                src_lang,
+                tar_lang,
+                style,
+                prompt_template
+            )
+            return results
+                
         if not self.model: return tar_text
 
         term_pairs = self.load_terms_for_automaton(src_lang, tar_lang)
@@ -161,14 +174,14 @@ class Gemini_Service:
         phrases = [f"{m['in_sentence']} -> {m['target']}" for m in matched_terms]
         #print(f"[Thinking] Found {len(phrases)} terms to preserve: {phrases}")
         # 3. Prompt
-        prompt = self.make_prompt(src_text, src_lang, tar_lang, tar_text, phrases, k=5)
-        #print(f"[Thinking] Prompt: {prompt}")
+        prompt = self.make_prompt(src_text, src_lang, tar_lang, tar_text, phrases, k=5, style=style)
+        print(f"[Thinking] Prompt: {prompt}")
         try:
             # SỬA LỖI: generate_content
             response = self.model.generate_content(
                 prompt,
                 generation_config={
-                    "temperature": 0.2,
+                    "temperature": 0.7,
                     "max_output_tokens": 4048
                 }
             )

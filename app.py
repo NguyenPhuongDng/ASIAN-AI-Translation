@@ -29,7 +29,7 @@ try:
     with open("language_code/gTT5_language_code.json", "r", encoding="utf-8") as f:
         gTT5_language_code = json.load(f)
 except Exception as e:
-    print(f"[ERROR] Lỗi khi load file ngôn ngữ hoặc style prompt: {e}")
+    print(f"[ERROR] Lỗi khi load file ngôn ngữ hoặc style prompt: {e}", flush=True)
     language_code_dict = {}
     prompt_template = {}
 
@@ -69,7 +69,7 @@ def handle_translate():
     fr_language = data.get("fr_language")
     styte = data.get("style", "None")
     THINKING = data.get('thinking', False)
-    print(f"[INFO] THINKING mode: {THINKING}")
+    print(f"[INFO] THINKING mode: {THINKING}", flush=True)
 
     # Validate input
     if not text:
@@ -92,15 +92,12 @@ def handle_translate():
             src_code=src_code
         )
 
-        if THINKING:
-            result = gemini_service.call_gemini_edit(
-                text, src_language, fr_language, result)
-        
-        styled_result = gemini_service.call_gemini_style_edit(
-            text, result, src_language, fr_language, styte, prompt_template
-        )
 
-        return jsonify({"translation": styled_result}), 200
+        result = gemini_service.call_gemini_edit(
+            text, src_language, fr_language, result, prompt = prompt_template.get(styte), thinking=THINKING
+            )
+        
+        return jsonify({"translation": result}), 200
 
     except Exception as e:
         return jsonify({"error": f"Lỗi khi dịch: {str(e)}"}), 500
