@@ -94,7 +94,7 @@ def handle_translate():
 
 
         result = gemini_service.call_gemini_edit(
-            text, src_language, fr_language, result, prompt = prompt_template.get(styte), thinking=THINKING
+            text, src_language, fr_language, result, styte, prompt_template, thinking=THINKING
             )
         
         return jsonify({"translation": result}), 200
