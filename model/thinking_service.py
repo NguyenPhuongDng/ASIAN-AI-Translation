@@ -20,6 +20,13 @@ class Gemini_Service:
             self.model = None
 
         self.NGROK_URL = Config.NGROK_URL
+        self.GEN_TRANSLATE_CONFIG = {
+            "temperature": 1,
+            "top_p": 1.0,
+            "top_k": 40,
+            "max_output_tokens": 4048,
+        }
+
 
     def call_gemini_style_edit(self, src_text: str, tranlate_text: str, source_lang : str, target_lang : str, style: str, prompt_template) -> str:
         prompt = prompt_template.get(style, "None")
@@ -31,10 +38,7 @@ class Gemini_Service:
         #print(f"[Thinking] Style Prompt: {prompt_filled}")
         response = self.model.generate_content(
             prompt_filled,
-            generation_config={
-                "temperature": 0.7,
-                "max_output_tokens": 4048,
-            }
+            generation_config=self.GEN_TRANSLATE_CONFIG
         )
         after_text = response.text.strip()
         return after_text
@@ -127,25 +131,33 @@ class Gemini_Service:
         return prompt
 
     def commet_score(self, data, src_text, tar_text):
-        #print(f"[Thinking] Scoring {len(data)} candidates with COMET...")
         if not self.NGROK_URL:
             return None
-        d = []
+
+        # build payload
+        payload = []
         for candidate in data:
-            d.append({
-                "src": [src_text],    # source sentence
-                "mt": [candidate],    # candidate translation
-                "ref": [[tar_text]]   # reference(s)
+            payload.append({
+                "src": [src_text],
+                "mt": [candidate],
+                "ref": [[tar_text]]
             })
 
         try:
-            response = requests.post(f"{self.NGROK_URL}/comet", json={"data": d})
-            comet = response.json()         
-            comet.get("comet_score", "")
-        except Exception as e:
+            response = requests.post(
+                f"{self.NGROK_URL}/comet",
+                json={"data": payload}
+            )
+            comet = response.json().get("comet_score", None)
+            if comet is None:
+                return None
+
+        except Exception:
             return None
         
+        # comet is now a list of scores, e.g. [0.91, 0.83, 0.77]
         best_index = max(range(len(comet)), key=lambda i: comet[i])
+        
         best_sentence = data[best_index]
         best_score = comet[best_index]
 
@@ -180,10 +192,7 @@ class Gemini_Service:
             # SỬA LỖI: generate_content
             response = self.model.generate_content(
                 prompt,
-                generation_config={
-                    "temperature": 0.7,
-                    "max_output_tokens": 4048
-                }
+                generation_config=self.GEN_TRANSLATE_CONFIG
             )
             
             # SỬA LỖI: .scrip() -> .strip()
@@ -200,8 +209,7 @@ class Gemini_Service:
                 return tar_text
 
         except Exception as e:
-            print(f"[Thinking Error] {e}")
+            print(f"[Thinking Error] type={type(e)}, detail={e}")
             return tar_text
-
 
 gemini_service = Gemini_Service()
